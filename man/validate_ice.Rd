@@ -16,5 +16,7 @@ A message indicating whether the file is valid.
 Validate a .ice file
 }
 \examples{
+\dontrun{
 validate_ice("example.ice")
+}
 }

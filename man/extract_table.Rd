@@ -18,5 +18,7 @@ The requested table as a data frame.
 Extract a table from a .ice file
 }
 \examples{
+\dontrun{
 extract_table("example.ice", "trade_flows")
+}
 }

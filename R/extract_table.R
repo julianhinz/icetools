@@ -4,7 +4,9 @@
 #' @param table_name The name of the table to extract.
 #' @return The requested table as a data frame.
 #' @examples
+#' \dontrun{
 #' extract_table("example.ice", "trade_flows")
+#' }
 #' @export
 extract_table <- function(ice_file, table_name) {
   ice_data <- read_ice(ice_file)

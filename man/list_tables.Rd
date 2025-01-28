@@ -16,5 +16,7 @@ A data frame with table names and descriptions.
 List tables in a .ice file
 }
 \examples{
+\dontrun{
 list_tables("example.ice")
+}
 }

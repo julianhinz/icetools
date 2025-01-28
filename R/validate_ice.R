@@ -3,7 +3,9 @@
 #' @param ice_file The file path to the .ice file.
 #' @return A message indicating whether the file is valid.
 #' @examples
+#' \dontrun{
 #' validate_ice("example.ice")
+#' }
 #' @export
 validate_ice <- function(ice_file) {
   ice_data <- read_ice(ice_file)

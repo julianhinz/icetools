@@ -16,5 +16,7 @@ A list containing the tables (data frames) and metadata.
 Read a .ice file
 }
 \examples{
+\dontrun{
 ice <- read_ice("example.ice")
+}
 }

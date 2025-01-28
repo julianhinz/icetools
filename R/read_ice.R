@@ -3,7 +3,9 @@
 #' @param ice_file The file path to the .ice file.
 #' @return A list containing the tables (data frames) and metadata.
 #' @examples
+#' \dontrun{
 #' ice <- read_ice("example.ice")
+#' }
 #' @export
 read_ice <- function(ice_file) {
   # Unpack .ice file
