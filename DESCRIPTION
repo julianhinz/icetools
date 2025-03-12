@@ -1,7 +1,7 @@
 Package: icetools
 Type: Package
 Title: Tools for Managing Initial Conditions for Quantitative Trade Models
-Version: 0.1.0
+Version: 0.1.1
 Author: Julian Hinz
 Maintainer: Julian Hinz <mail@julianhinz.com>
 Description: A package to create, read, validate, and manage .ice files used for initial conditions in quantitative trade models. Includes metadata handling and table validation.
@@ -9,6 +9,7 @@ Depends: R (>= 3.5.0)
 Imports:
     yaml,
     utils,
+    cli,
     tools
 License: MIT + file LICENSE
 Encoding: UTF-8
