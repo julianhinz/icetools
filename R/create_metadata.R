@@ -31,7 +31,8 @@ create_metadata <- function(tables, description = "", version = "1.0", timestamp
     table <- tables[[table_name]]
     if (!non_interactive && is.null(table_descriptions[[table_name]])) {
       message("Please provide a description for table: ", table_name)
-      table_description <- readline("Description: ")
+      cat("Description: ")
+      table_description <- readLines("stdin", n = 1)
     } else {
       table_description <- table_descriptions[[table_name]] %||% paste("Table for", table_name)
     }

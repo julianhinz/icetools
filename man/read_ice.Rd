@@ -2,7 +2,7 @@
 % Please edit documentation in R/read_ice.R
 \name{read_ice}
 \alias{read_ice}
-\title{Read a .ice file}
+\title{Read an .ice file}
 \usage{
 read_ice(ice_file)
 }
@@ -10,13 +10,16 @@ read_ice(ice_file)
 \item{ice_file}{The file path to the .ice file.}
 }
 \value{
-A list containing the tables (data frames) and metadata.
+A list containing the extracted tables as `data.table` objects, with metadata stored as an attribute.
 }
 \description{
-Read a .ice file
+This function reads an .ice file, extracts its contents, and loads the tables as `data.table` objects.
+The metadata is stored as an attribute of the returned object.
 }
 \examples{
 \dontrun{
 ice <- read_ice("example.ice")
+print(ice)
+data.table::is.data.table(ice$trade_flows)  # Should return TRUE
 }
 }

@@ -1,3 +1,17 @@
+#' Read an .ice file
+#'
+#' This function reads an .ice file, extracts its contents, and loads the tables as `data.table` objects.
+#' The metadata is stored as an attribute of the returned object.
+#'
+#' @param ice_file The file path to the .ice file.
+#' @return A list containing the extracted tables as `data.table` objects, with metadata stored as an attribute.
+#' @examples
+#' \dontrun{
+#' ice <- read_ice("example.ice")
+#' print(ice)
+#' data.table::is.data.table(ice$trade_flows)  # Should return TRUE
+#' }
+#' @export
 read_ice <- function(ice_file) {
   # Unpack .ice file
   temp_dir <- tempfile()
@@ -7,12 +21,12 @@ read_ice <- function(ice_file) {
   # Read metadata
   metadata <- yaml::read_yaml(file.path(temp_dir, "metadata.yaml"))
 
-  # Read tables and attach metadata to them
+  # Read tables and ensure they are data.tables
   tables <- list()
   csv_files <- list.files(temp_dir, pattern = "\\.csv$", full.names = TRUE)
   for (csv_file in csv_files) {
     table_name <- tools::file_path_sans_ext(basename(csv_file))
-    table <- utils::read.csv(csv_file)
+    table <- data.table::fread(csv_file)  # Read as data.table
     if (!is.null(metadata$tables[[table_name]])) {
       attr(table, "metadata") <- metadata$tables[[table_name]]
     }
