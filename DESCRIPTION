@@ -10,7 +10,8 @@ Imports:
     yaml,
     utils,
     cli,
-    tools
+    tools,
+    data.table
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
