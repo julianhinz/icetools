@@ -54,6 +54,30 @@ print(ice)
 validate_ice("example.ice")
 ```
 
+## Converting Existing Data to `.ice` Format
+
+If you have existing initial conditions saved as a named list in an `.rds` file, you can convert it into the `.ice` format using the helper script:
+
+```bash
+Rscript inst/scripts/convert_to_ice.R data/initial_conditions.rds output/example.ice config/descriptions.yaml
+```
+
+or when installed
+
+```bash
+Rscript $(Rscript -e 'cat(system.file("scripts", "convert_to_ice.R", package = "icetools"))') input.rds output.ice descriptions.yaml
+```
+
+- The third argument (descriptions.yaml) is optional.
+- If not provided, the script will ask interactively for table descriptions.
+
+Example YAML structure:
+
+```yaml
+trade_flows: "Bilateral trade flows by reporting and partner country."
+tariffs: "Applied tariffs by country and product group."
+```
+
 ---
 
 ## **How to Cite**
