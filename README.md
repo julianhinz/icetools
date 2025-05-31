@@ -6,7 +6,7 @@
 
 ---
 
-## **Features**
+## Features
 
 - **`generate_ice`:** Create a `.ice` file from data tables and metadata.
 - **`read_ice`:** Read and extract data and metadata from a `.ice` file.
@@ -17,7 +17,7 @@
 
 ---
 
-## **Installation**
+## Installation
 
 You can install the development version of `icetools` directly from GitHub:
 
@@ -28,7 +28,7 @@ devtools::install_github("julianhinz/icetools")
 
 ---
 
-## **Quick Start**
+## Quick Start
 
 ```R
 # Load the package
