@@ -32,9 +32,31 @@ generate_ice <- function(tables, metadata, output_file) {
   # Write metadata
   yaml::write_yaml(metadata, file = file.path(temp_dir, "metadata.yaml"))
 
-  # Create gzipped archive
+  # Ensure output_file has .ice extension
   output_file <- ifelse(grepl("\\.ice$", output_file), output_file, paste0(output_file, ".ice"))
-  utils::tar(output_file, files = list.files(temp_dir, full.names = TRUE), compression = "gzip")
+
+  # Create a temporary tar file first
+  temp_tar <- tempfile(fileext = ".ice")
+
+  # Save current working directory
+  old_wd <- getwd()
+
+  # Change to temp directory and create archive
+  setwd(temp_dir)
+  tryCatch({
+    utils::tar(temp_tar, files = list.files(".", full.names = FALSE), compression = "gzip")
+
+    # Move the temp file to the desired location
+    setwd(old_wd)
+    file.copy(temp_tar, output_file, overwrite = TRUE)
+    file.remove(temp_tar)
+  }, finally = {
+    # Always restore original working directory
+    setwd(old_wd)
+  })
+
+  # Clean up temp directory
+  unlink(temp_dir, recursive = TRUE)
 
   message(".ice file created at ", output_file)
 }
