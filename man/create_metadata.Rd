@@ -8,7 +8,9 @@ create_metadata(
   tables,
   description = "",
   version = "1.0",
-  timestamp = Sys.time()
+  timestamp = Sys.time(),
+  non_interactive = FALSE,
+  descriptions_file = NULL
 )
 }
 \arguments{
@@ -19,17 +21,14 @@ create_metadata(
 \item{version}{A version number for the .ice file (default is "1.0").}
 
 \item{timestamp}{A timestamp for the .ice file (default is the current time).}
+
+\item{non_interactive}{Logical, if TRUE does not prompt and uses defaults.}
+
+\item{descriptions_file}{Optional path to a YAML file with table descriptions.}
 }
 \value{
 A list containing metadata for the .ice file.
 }
 \description{
 Create metadata for tables
-}
-\examples{
-tables <- list(
-  trade_flows = data.frame(country = c("USA", "CHN"), value = c(100, 200)),
-  tariffs = data.frame(country = c("USA", "CHN"), value = c(0.1, 0.2))
-)
-metadata <- create_metadata(tables)
 }
