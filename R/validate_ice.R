@@ -1,6 +1,12 @@
 #' Validate a .ice file
 #'
 #' @param ice_file The file path to the .ice file.
+#'
+#' @details
+#' Assumes that `read_ice()` returns an object of class `"ice"`: a named list
+#' of tables with file-level metadata available through the `"metadata"`
+#' attribute. The metadata must contain a `tables` entry defining each table's
+#' keys and description.
 #' @return A message indicating whether the file is valid.
 #' @examples
 #' \dontrun{
@@ -9,11 +15,20 @@
 #' @export
 validate_ice <- function(ice_file) {
   ice_data <- read_ice(ice_file)
-  tables <- ice_data$tables
-  metadata <- ice_data$metadata
+  tables <- as.list(ice_data)
+  metadata <- attr(ice_data, "metadata")
 
-  for (table_name in names(metadata$tables)) {
-    table_meta <- metadata$tables[[table_name]]
+  if (is.null(metadata)) {
+    stop("Metadata attribute missing from .ice object.")
+  }
+
+  table_definitions <- metadata$tables
+  if (is.null(table_definitions) || length(table_definitions) == 0) {
+    stop("No table definitions found in metadata.")
+  }
+
+  for (table_name in names(table_definitions)) {
+    table_meta <- table_definitions[[table_name]]
     if (!table_name %in% names(tables)) {
       stop("Table ", table_name, " is missing from the .ice file.")
     }
