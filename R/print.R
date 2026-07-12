@@ -26,7 +26,7 @@ print.ice <- function(x, ...) {
   if (any(is_table)) {
     cli::cli_h2("Tables")
     dims <- vapply(names(x)[is_table], function(nm) {
-      paste0(nm, " (", nrow(x[[nm]]), " × ", ncol(x[[nm]]), ")")
+      paste0(nm, " (", nrow(x[[nm]]), " x ", ncol(x[[nm]]), ")")
     }, character(1))
     cli::cli_ul(dims)
   }

@@ -16,7 +16,8 @@ An object of class `"icc"`: `arrays` (dense named arrays),
 \description{
 Loads a compiled-initial-conditions object written by [compile_ice()].
 The serialization format is sniffed from the file's magic bytes (qs2
-files start with `0x0b 0x0e`; RDS with `X\n` or a gzip header), so
+files start with `0x0b 0x0e`; RDS with `0x58 0x0a` or a gzip
+header), so
 files travel between machines regardless of whether qs2 is installed
 at either end - reading a qs2-written file does require qs2.
 }

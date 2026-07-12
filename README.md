@@ -147,7 +147,7 @@ trade_elasticity: "Trade elasticities by sector."
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE.md](LICENSE.md).
 
 ## Contributing
 

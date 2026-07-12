@@ -1,3 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^README\.md$
+^CLAUDE\.md$
+^docs$
+^dev-notes$
+^\.github$
+^\.gitattributes$
+^\.DS_Store$
+^\.Rhistory$
+^LICENSE\.md$
