@@ -25,5 +25,5 @@ License: MIT + file LICENSE
 URL: https://icefil.es, https://github.com/julianhinz/icetools
 BugReports: https://github.com/julianhinz/icetools/issues
 Encoding: UTF-8
-RoxygenNote: 7.3.2
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

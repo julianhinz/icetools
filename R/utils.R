@@ -1,5 +1,8 @@
 # Internal helpers and format constants
 
+# let data.table find its [ methods when icetools is Imported, not attached
+.datatable.aware <- TRUE
+
 # .ice format version written by this package. Files written by icetools
 # <= 0.1.2 carry no format_version field and are treated as "1.0".
 # Schema changes bump this and get documented in docs/ice-schema.md.
@@ -185,10 +188,10 @@ metadata_type_to_colclass <- function(type) {
 # Coerce a parsed scalar (read from scalars.csv as character) back to its
 # declared type.
 coerce_scalar <- function(value, type) {
-  switch(type %||% "numeric",
+  suppressWarnings(switch(type %||% "numeric",
     character = as.character(value),
     logical = as.logical(value),
     integer = as.integer(value),
     as.numeric(value)
-  )
+  ))
 }

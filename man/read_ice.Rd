@@ -2,24 +2,41 @@
 % Please edit documentation in R/read_ice.R
 \name{read_ice}
 \alias{read_ice}
-\title{Read an .ice file}
+\title{Read a .ice file}
 \usage{
 read_ice(ice_file)
 }
 \arguments{
-\item{ice_file}{The file path to the .ice file.}
+\item{ice_file}{Path to the .ice file.}
 }
 \value{
-A list containing the extracted tables as `data.table` objects, with metadata stored as an attribute.
+A list of class `"ice"`: tables as `data.table`s (each with
+  its table metadata attached as attribute `metadata`), scalars as
+  length-1 vectors. Attributes `metadata` (full metadata list) and
+  `filename` are set on the list.
 }
 \description{
-This function reads an .ice file, extracts its contents, and loads the tables as `data.table` objects.
-The metadata is stored as an attribute of the returned object.
+Reads a `.ice` archive and returns its components: data tables as
+`data.table` objects and scalar components as plain vectors. The
+archive's metadata is attached as the `metadata` attribute and drives
+column types: key/value columns are parsed according to the types
+recorded in `metadata.yaml`, so e.g. character keys with leading zeros
+survive and the value column of every table declared numeric or
+integer is ALWAYS a double, whatever fread's type inference would have
+guessed (the read side of the numeric round-trip guarantee).
+}
+\details{
+Components are returned in metadata order (tables first, then
+scalars). Data members present in the archive but missing from the
+metadata are appended at the end with a warning; members declared in
+the metadata but missing from the archive warn and are skipped (use
+[validate_ice()] to make either fatal).
 }
 \examples{
 \dontrun{
 ice <- read_ice("example.ice")
 print(ice)
-data.table::is.data.table(ice$trade_flows)  # Should return TRUE
+ice$trade_flows            # a data.table
+attr(ice, "metadata")      # full metadata
 }
 }

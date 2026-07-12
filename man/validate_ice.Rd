@@ -4,16 +4,42 @@
 \alias{validate_ice}
 \title{Validate a .ice file}
 \usage{
-validate_ice(ice_file)
+validate_ice(ice_file, check_na = TRUE, check_complete = TRUE, quiet = FALSE)
 }
 \arguments{
-\item{ice_file}{The file path to the .ice file.}
+\item{ice_file}{Path to the .ice file.}
+
+\item{check_na}{If `TRUE` (default), missing values in any table are
+an error.}
+
+\item{check_complete}{If `TRUE` (default), each table must contain
+every combination of its observed key values exactly once.}
+
+\item{quiet}{If `TRUE`, suppress the success message.}
 }
 \value{
-A message indicating whether the file is valid.
+Invisibly `TRUE` if the file is valid; otherwise an error
+  listing every problem found.
 }
 \description{
-Validate a .ice file
+Checks a `.ice` archive against its own metadata and the format
+contract (see `docs/ice-schema.md`). All problems are collected and
+reported together in a single error. Checks performed:
+}
+\details{
+* the archive is readable and carries a `metadata.yaml`;
+* every table/scalar declared in the metadata exists in the archive,
+  and every data member in the archive is declared in the metadata;
+* every table has exactly its declared key columns plus its declared
+  value column, with matching column types;
+* no missing values (`check_na = TRUE`);
+* keys form a complete Cartesian grid: every combination of observed
+  key values occurs exactly once (`check_complete = TRUE`);
+* recorded member checksums match (format >= 1.1 archives written
+  with `checksums = TRUE`).
+
+Note that versions up to 0.1.2 ran none of these checks: a bug made
+`validate_ice()` silently validate anything (issue #7).
 }
 \examples{
 \dontrun{

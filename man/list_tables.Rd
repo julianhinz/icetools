@@ -2,18 +2,26 @@
 % Please edit documentation in R/list_tables.R
 \name{list_tables}
 \alias{list_tables}
-\title{List tables in a .ice file}
+\title{List the components of a .ice file}
 \usage{
 list_tables(ice_file)
 }
 \arguments{
-\item{ice_file}{The file path to the .ice file.}
+\item{ice_file}{Path to the .ice file.}
 }
 \value{
-A data frame with table names and descriptions.
+A `data.table` with columns `name`, `kind` ("table" or
+  "scalar"), `description`, `keys` (comma-separated key column names),
+  `value_name`, and `value_type`.
 }
 \description{
-List tables in a .ice file
+Reads only the archive's `metadata.yaml` (data members are not
+parsed) and returns one row per component: tables and, for format
+>= 1.1 archives, scalars.
+}
+\details{
+Versions up to 0.1.2 always returned `NULL` here due to a metadata
+access bug (issue #7).
 }
 \examples{
 \dontrun{

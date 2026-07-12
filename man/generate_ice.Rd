@@ -4,20 +4,46 @@
 \alias{generate_ice}
 \title{Generate a .ice file}
 \usage{
-generate_ice(tables, metadata, output_file)
+generate_ice(tables, metadata, output_file, validate = FALSE, checksums = TRUE)
 }
 \arguments{
-\item{tables}{A named list of data frames, where names correspond to table names.}
+\item{tables}{A named list of components: data.frames/data.tables
+(last column = value column) and/or length-1 scalars. Names must be
+unique and archive-safe; see [create_metadata()].}
 
-\item{metadata}{A list containing metadata for the .ice file, including table details.}
+\item{metadata}{Metadata list, typically from [create_metadata()].
+Component entries should match `tables`; a mismatch triggers a
+warning (and a validation failure if `validate = TRUE`). Extra
+top-level fields (e.g. `coordinates`, `provenance`) are written
+verbatim.}
 
-\item{output_file}{The file path where the .ice file will be saved (should end with .ice).}
+\item{output_file}{Path where the `.ice` file is written (the
+extension is appended if missing). Parent directories are created
+as needed.}
+
+\item{validate}{If `TRUE`, the written file is read back and checked
+with [validate_ice()] before returning (read-after-write
+validation). Default `FALSE`.}
+
+\item{checksums}{If `TRUE` (default), a `checksums` section with the
+SHA-256 of every data member is written into `metadata.yaml`.}
 }
 \value{
-A message indicating the file creation location.
+Invisibly, the path to the written file.
 }
 \description{
-Generate a .ice file
+Writes a list of components (data tables and scalars) plus their
+metadata into a `.ice` archive: a gzip-compressed tar containing one
+CSV per table, a `scalars.csv` member if any scalar components are
+present, and a `metadata.yaml`. See `docs/ice-schema.md` for the
+format specification.
+}
+\details{
+Numeric columns are serialized so that reading the file back with
+[read_ice()] reproduces every double bit-for-bit (verified at write
+time): shortest round-trip decimal strings, with a whole-column
+fallback to C99 hex-float literals for columns the platform's decimal
+parsers cannot round-trip (rare; see the schema document).
 }
 \examples{
 tables <- list(
@@ -25,5 +51,6 @@ tables <- list(
   tariffs = data.frame(country = c("USA", "CHN"), value = c(0.1, 0.2))
 )
 metadata <- create_metadata(tables)
-generate_ice(tables, metadata, "example.ice")
+out <- file.path(tempdir(), "example.ice")
+generate_ice(tables, metadata, out)
 }

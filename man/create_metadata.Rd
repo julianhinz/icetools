@@ -2,33 +2,84 @@
 % Please edit documentation in R/create_metadata.R
 \name{create_metadata}
 \alias{create_metadata}
-\title{Create metadata for tables}
+\title{Create metadata for the components of a .ice file}
 \usage{
 create_metadata(
   tables,
   description = "",
   version = "1.0",
   timestamp = Sys.time(),
-  non_interactive = FALSE,
-  descriptions_file = NULL
+  non_interactive = TRUE,
+  descriptions_file = NULL,
+  identifier = NULL,
+  title = NULL,
+  license = NULL,
+  contact = NULL,
+  citation = NULL,
+  model = NULL,
+  scenario = NULL,
+  sources = NULL,
+  assumptions = NULL,
+  generator = NULL,
+  coordinates = NULL,
+  provenance = NULL
 )
 }
 \arguments{
-\item{tables}{A named list of data frames to infer metadata from.}
+\item{tables}{Named list of components (data.frames/data.tables and/or
+scalars). Names must be unique and archive-safe
+(`^[A-Za-z0-9][A-Za-z0-9._-]*$`; `metadata` and `scalars` are
+reserved).}
 
 \item{description}{A general description of the .ice file.}
 
-\item{version}{A version number for the .ice file (default is "1.0").}
+\item{version}{Artifact version string recorded in the metadata
+(default `"1.0"`). This is *your* dataset's version, not the .ice
+format version, which is stamped separately by [generate_ice()].}
 
-\item{timestamp}{A timestamp for the .ice file (default is the current time).}
+\item{timestamp}{Timestamp recorded in the metadata (default
+[Sys.time()]).}
 
-\item{non_interactive}{Logical, if TRUE does not prompt and uses defaults.}
+\item{non_interactive}{If `TRUE` (default), missing component
+descriptions fall back to a generic placeholder. Set to `FALSE` to be
+prompted for each missing description; this requires an interactive
+session and errors in scripts (the pre-0.2.0 default prompted by
+default, which hung pipelines).}
 
-\item{descriptions_file}{Optional path to a YAML file with table descriptions.}
+\item{descriptions_file}{Optional path to a YAML file mapping component
+names to descriptions.}
+
+\item{identifier, title, license, contact, citation}{Optional artifact-level
+fields recorded verbatim in the metadata.}
+
+\item{model, scenario, sources, assumptions, generator, coordinates, provenance}{Optional free-form lists recorded verbatim: model description (id,
+spec source/ref), scenario coordinates (base year, target year,
+scenario id), source provenance entries, free-form assumptions,
+generator info (package/repo/commit), artifact coordinates, and
+upstream provenance. See `docs/ice-schema.md` for the conventions
+used by the KITE pipeline.}
 }
 \value{
-A list containing metadata for the .ice file.
+A list ready to be passed to [generate_ice()].
 }
 \description{
-Create metadata for tables
+Builds the `metadata.yaml` structure for a list of initial-condition
+components. Two component kinds are supported (see `docs/ice-schema.md`):
+}
+\details{
+* **Tables** (data.frames/data.tables): the *last column is the value
+  column*, every column before it is a key column. Column names and
+  types are recorded and are authoritative when the file is read back.
+* **Scalars** (length-1 numeric/character/logical vectors), e.g.
+  model-wide nest elasticities: recorded in a `scalars` section and
+  stored in a `scalars.csv` archive member by [generate_ice()].
+}
+\examples{
+components <- list(
+  trade_share = data.frame(origin = c("USA", "CHN"),
+                           destination = c("CHN", "USA"),
+                           value = c(0.4, 0.6)),
+  consumption = 0.35  # scalar nest elasticity
+)
+md <- create_metadata(components, description = "Example")
 }

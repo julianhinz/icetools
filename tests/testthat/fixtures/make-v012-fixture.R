@@ -26,9 +26,9 @@ tables <- list(
   ),
   # integral-looking numeric values (fread would guess integer)
   tariff = data.frame(
-    origin = c("USA", "CHN"),
-    destination = c("CHN", "USA"),
-    value = c(1, 2)
+    origin = c("USA", "USA", "CHN", "CHN"),
+    destination = c("USA", "CHN", "USA", "CHN"),
+    value = c(1, 2, 3, 1)
   ),
   # character keys with leading zeros (fread would guess integer)
   sector_share = data.frame(

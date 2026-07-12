@@ -2,20 +2,28 @@
 % Please edit documentation in R/extract_table.R
 \name{extract_table}
 \alias{extract_table}
-\title{Extract a table from a .ice file}
+\title{Extract a single component from a .ice file}
 \usage{
 extract_table(ice_file, table_name)
 }
 \arguments{
-\item{ice_file}{The file path to the .ice file.}
+\item{ice_file}{Path to the .ice file.}
 
-\item{table_name}{The name of the table to extract.}
+\item{table_name}{Name of the table or scalar to extract.}
 }
 \value{
-The requested table as a data frame.
+The requested table as a `data.table`, or the requested
+  scalar as a length-1 vector.
 }
 \description{
-Extract a table from a .ice file
+Extracts one table (or scalar) without reading the rest of the
+archive: only `metadata.yaml` and the requested member are unpacked
+and parsed, with the same metadata-driven column types as
+[read_ice()].
+}
+\details{
+Versions up to 0.1.2 always errored here due to a metadata access bug
+(issue #7).
 }
 \examples{
 \dontrun{
