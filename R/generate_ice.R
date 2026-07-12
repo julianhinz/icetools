@@ -26,7 +26,11 @@ generate_ice <- function(tables, metadata, output_file) {
   temp_dir <- tempfile()
   dir.create(temp_dir)
   for (table_name in names(tables)) {
-    utils::write.csv(tables[[table_name]], file = file.path(temp_dir, paste0(table_name, ".csv")), row.names = FALSE)
+    # fwrite: full double precision, no scientific notation, no silent
+    # coercion - the write side of the numeric round-trip guarantee
+    data.table::fwrite(tables[[table_name]],
+                       file = file.path(temp_dir, paste0(table_name, ".csv")),
+                       scipen = 999)
   }
 
   # Write metadata

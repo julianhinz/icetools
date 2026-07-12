@@ -27,6 +27,11 @@ read_ice <- function(ice_file) {
   for (csv_file in csv_files) {
     table_name <- tools::file_path_sans_ext(basename(csv_file))
     table <- data.table::fread(csv_file)  # Read as data.table
+    # numeric round-trip guarantee: a `value` column is ALWAYS double -
+    # fread's type inference parses integral-looking columns as integer,
+    # which downstream consumers must not have to defend against
+    if ("value" %in% names(table))
+      data.table::set(table, j = "value", value = as.numeric(table[["value"]]))
     if (!is.null(metadata$tables[[table_name]])) {
       attr(table, "metadata") <- metadata$tables[[table_name]]
     }
