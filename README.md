@@ -1,107 +1,157 @@
-# `icetools`: Tools for Managing Initial Conditions for Quantitative Trade Models
+<img src="man/figures/logo.svg" align="right" alt="icetools logo" width="140"/>
 
-<img src="man/figures/logo.svg" alt="icetools logo" width="200"/>
+# `icetools` — tools for `.ice` files
 
-`icetools` is an R package designed for creating, reading, validating, and managing `.ice` files, a custom file format used for storing initial conditions for quantitative trade models. The `.ice` format ensures consistency, readability, and extensibility for data and metadata handling in trade simulations.
+**Shareable calibration files for quantitative trade models.
+Readable, reproducible, portable.**
 
----
-
-## Features
-
-- **`generate_ice`:** Create a `.ice` file from data tables and metadata.
-- **`read_ice`:** Read and extract data and metadata from a `.ice` file.
-- **`validate_ice`:** Validate the structure and contents of a `.ice` file.
-- **`create_metadata`:** Automatically generate metadata for data tables, with options for user-defined descriptions.
-- **`list_tables`:** List all tables in a `.ice` file with descriptions.
-- **`extract_table`:** Extract individual tables from a `.ice` file.
-
----
+`icetools` is the reference implementation of the
+[**`.ice`**](docs/ice-schema.md) format (**I**nitial **C**onditions
+**E**quilibrium: long-format tables + scalars + self-describing YAML
+metadata in one archive) and its compiled companion
+[**`.icc`**](docs/icc-schema.md) (the long-table → dense-array cast
+done once and cached, for ~30–40× faster model setup). The format's
+home is **[icefil.es](https://icefil.es)** — browse the library of
+published calibration artifacts there.
 
 ## Installation
 
-You can install the development version of `icetools` directly from GitHub:
-
-```R
+```r
 # install.packages("devtools")
 devtools::install_github("julianhinz/icetools")
 ```
 
----
+## Quickstart: `.ice`
 
-## Quick Start
-
-```R
-# Load the package
+```r
 library(icetools)
 
-# Example data
-tables <- list(
-  trade_flows = data.frame(country = c("USA", "CHN"), value = c(100, 200)),
-  tariffs = data.frame(country = c("USA", "CHN"), value = c(0.1, 0.2))
+# components: data tables (last column = value column) and scalars
+components <- list(
+  trade_share = data.frame(
+    origin      = c("USA", "USA", "CHN", "CHN"),
+    destination = c("USA", "CHN", "USA", "CHN"),
+    value       = c(0.75, 0.25, 0.40, 0.60)
+  ),
+  trade_elasticity = data.frame(sector = c("A", "B"), theta = c(4.5, 6.0)),
+  consumption = 0.35   # scalar parameter, first-class since 0.2.0
 )
 
-# Create metadata
-metadata <- create_metadata(tables, description = "Example initial conditions")
+metadata <- create_metadata(
+  components,
+  description = "Toy two-country calibration",
+  version     = "1.0"
+)
 
-# Generate a .ice file
-generate_ice(tables, metadata, "example.ice")
+generate_ice(components, metadata, "toy.ice", validate = TRUE)
 
-# Read the .ice file
-ice <- read_ice("example.ice")
-print(ice)
+ice <- read_ice("toy.ice")     # tables as data.tables, scalars as vectors
+ice$trade_share
+ice$consumption                # 0.35
 
-# Validate the .ice file
-validate_ice("example.ice")
+validate_ice("toy.ice")        # structure, types, completeness, checksums
+list_tables("toy.ice")         # one row per component
+extract_table("toy.ice", "trade_share")
+build_manifest(".", output_csv = "manifest.csv")   # library overview
 ```
 
-## Converting Existing Data to `.ice` Format
+What the format guarantees (spec: [`docs/ice-schema.md`](docs/ice-schema.md)):
 
-If you have existing initial conditions saved as a named list in an `.rds` file, you can convert it into the `.ice` format using the helper script:
+- **Numeric round-trip to the last ulp** — every double you write is
+  the double you read back, verified at write time.
+- **Metadata-driven types** — declared column types are authoritative:
+  sector codes like `"01"` keep their zeros; a table's value column is
+  always a double.
+- **Self-describing provenance** — descriptions, versions, sources,
+  coordinates, per-member SHA-256 checksums inside the file.
+
+## Quickstart: `.icc`
+
+```r
+compile_ice("toy.ice", "toy.icc")        # cast once, cache (qs2 or RDS)
+
+icc <- read_icc("toy.icc")
+icc$arrays$trade_share                   # dense named array
+#      destination
+# origin  CHN  USA
+#    CHN 0.60 0.40
+#    USA 0.25 0.75
+
+validate_icc("toy.icc", "toy.ice")       # errors with STALE if the .ice changed
+```
+
+An `.icc` is a cache: it records the SHA-256 and coordinates of its
+source `.ice`, so stale caches are always detectable
+(spec: [`docs/icc-schema.md`](docs/icc-schema.md)).
+
+## The pipeline these formats live in
+
+The KITE ecosystem is the worked example of the intended workflow:
+
+```
+KITE-data  ──builds & validates──▶  *.ice artifacts (GitHub Releases)
+                                        │
+                     ┌──────────────────┼──────────────────┐
+                     ▼                                     ▼
+                ricardo-aas                            KITE / KITE-dev
+             (fetches artifacts)              read_ice() → compile_ice()
+                                                   │
+                                              *.icc cache → fast repeated solves
+```
+
+[KITE-data](https://github.com/julianhinz/KITE-data) stages initial
+conditions with `create_metadata()` + `generate_ice()` and publishes
+them as release artifacts with a checksum manifest; consumers fetch an
+artifact, `read_ice()` it, and compile an `.icc` next to it so every
+subsequent model run skips the cast. Any other producer/consumer pair
+can use the same pattern — the formats carry everything needed.
+
+## Documentation
+
+- [`.ice` format specification](docs/ice-schema.md) (versioned, currently 1.1)
+- [`.icc` format specification](docs/icc-schema.md) (versioned, currently 1.0)
+- [icefil.es](https://icefil.es) — format overview, artifact library, contribution guide
+- Function reference: `?generate_ice`, `?read_ice`, `?validate_ice`,
+  `?create_metadata`, `?list_tables`, `?extract_table`,
+  `?build_manifest`, `?sha256_file`, `?compile_ice`, `?read_icc`,
+  `?validate_icc`, `?icc_tables`
+
+## Converting existing data
+
+A named list in an `.rds` converts in one call:
 
 ```bash
-Rscript inst/scripts/convert_to_ice.R data/initial_conditions.rds output/example.ice config/descriptions.yaml
+Rscript $(Rscript -e 'cat(system.file("scripts", "convert_to_ice.R", package = "icetools"))') \
+  input.rds output.ice descriptions.yaml
 ```
 
-or when installed
-
-```bash
-Rscript $(Rscript -e 'cat(system.file("scripts", "convert_to_ice.R", package = "icetools"))') input.rds output.ice descriptions.yaml
-```
-
-- The third argument (descriptions.yaml) is optional.
-- If not provided, the script will ask interactively for table descriptions.
-
-Example YAML structure:
+The optional `descriptions.yaml` maps component names to descriptions
+(otherwise generic placeholders are used):
 
 ```yaml
-trade_flows: "Bilateral trade flows by reporting and partner country."
-tariffs: "Applied tariffs by country and product group."
+trade_share: "Bilateral trade shares by origin and destination."
+trade_elasticity: "Trade elasticities by sector."
 ```
 
----
-
-## **How to Cite**
-
-If you use `icetools` in your research, please cite it as follows:
+## How to cite
 
 ```bibtex
-@Misc{Hinz2025icetools,
+@Misc{Hinz2026icetools,
   author = {Julian Hinz},
-  title = {icetools: Tools for Managing Initial Conditions for Quantitative Trade Models},
-  year = {2025},
-  url = {https://github.com/julianhinz/icetools},
-  note = {Version 0.1.0}
+  title  = {icetools: Tools for Managing Initial Conditions for Quantitative Trade Models},
+  year   = {2026},
+  url    = {https://icefil.es},
+  note   = {R package version 0.2.0}
 }
 ```
 
----
+## License
 
-## **License**
+MIT — see [LICENSE](LICENSE).
 
-`icetools` is licensed under the MIT License.
+## Contributing
 
----
-
-## **Contributing**
-
-Contributions are welcome! Please open an issue or submit a pull request on GitHub.
+Issues and pull requests welcome at
+[github.com/julianhinz/icetools](https://github.com/julianhinz/icetools).
+Schema changes must bump the format version and update the schema
+documents — see [CLAUDE.md](CLAUDE.md) for repo conventions.
