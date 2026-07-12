@@ -117,6 +117,23 @@ sha256_file <- function(path) {
   digest::digest(file = path, algo = "sha256")
 }
 
+# utils::untar(tar = "internal") leaks an open file connection when it
+# errors mid-extraction (e.g. truncated gzip). Track connections and close
+# whatever a failed extraction leaves behind. Returns TRUE on success.
+untar_safely <- function(tarfile, ...) {
+  before <- getAllConnections()
+  ok <- tryCatch(
+    { utils::untar(tarfile, ..., tar = "internal"); TRUE },
+    error = function(e) FALSE, warning = function(w) FALSE
+  )
+  if (!ok) {
+    for (con in setdiff(getAllConnections(), before)) {
+      try(close(getConnection(con)), silent = TRUE)
+    }
+  }
+  ok
+}
+
 # Classify a component of the initial-conditions list.
 # "table": any data.frame with at least one column.
 # "scalar": length-1 atomic of a CSV-representable type.

@@ -39,10 +39,7 @@ read_ice <- function(ice_file) {
 
   # internal untar first (pure R error conditions, reads ustar/gnu/pax);
   # fall back to the system tar for exotic archives
-  extracted <- tryCatch(
-    { utils::untar(ice_file, exdir = temp_dir, tar = "internal"); TRUE },
-    error = function(e) FALSE, warning = function(w) FALSE
-  )
+  extracted <- untar_safely(ice_file, exdir = temp_dir)
   if (!extracted) {
     status <- suppressWarnings(tryCatch(
       utils::untar(ice_file, exdir = temp_dir),

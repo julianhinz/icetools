@@ -36,10 +36,7 @@ extract_table <- function(ice_file, table_name) {
   }
 
   member <- paste0(table_name, ".csv")
-  ok <- tryCatch(
-    { utils::untar(ice_file, files = member, exdir = temp_dir, tar = "internal"); TRUE },
-    error = function(e) FALSE, warning = function(w) FALSE
-  )
+  ok <- untar_safely(ice_file, files = member, exdir = temp_dir)
   member_path <- file.path(temp_dir, member)
   if (!ok || !file.exists(member_path)) {
     available <- c(names(metadata$tables), names(metadata$scalars))

@@ -61,10 +61,7 @@ read_ice_metadata <- function(ice_file) {
   temp_dir <- tempfile("ice_metadata")
   dir.create(temp_dir)
   on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
-  ok <- tryCatch(
-    { utils::untar(ice_file, files = "metadata.yaml", exdir = temp_dir, tar = "internal"); TRUE },
-    error = function(e) FALSE, warning = function(w) FALSE
-  )
+  ok <- untar_safely(ice_file, files = "metadata.yaml", exdir = temp_dir)
   meta_path <- file.path(temp_dir, "metadata.yaml")
   if (!ok || !file.exists(meta_path)) {
     cli::cli_abort("{.path {ice_file}} is not a valid .ice archive: no {.file metadata.yaml} member.")
