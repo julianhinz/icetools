@@ -1,18 +1,29 @@
 Package: icetools
 Type: Package
 Title: Tools for Managing Initial Conditions for Quantitative Trade Models
-Version: 0.1.2
-Author: Julian Hinz
-Maintainer: Julian Hinz <mail@julianhinz.com>
-Description: A package to create, read, validate, and manage .ice files used for initial conditions in quantitative trade models. Includes metadata handling and table validation.
-Depends: R (>= 3.5.0)
+Version: 0.1.2.9000
+Authors@R: person("Julian", "Hinz", email = "mail@julianhinz.com",
+    role = c("aut", "cre"))
+Description: Create, read, validate, and manage .ice files (portable initial
+    conditions for quantitative trade models: per-table CSVs plus YAML
+    metadata in a tar archive) and .icc files (compiled initial conditions:
+    the long-table to dense-array cast done once and serialized for fast
+    model setup). Includes metadata handling, table validation, checksums,
+    and archive manifests. The format reference lives at <https://icefil.es>.
+Depends: R (>= 4.1.0)
 Imports:
     yaml,
     utils,
     cli,
     tools,
-    data.table
+    data.table,
+    digest
+Suggests:
+    qs2,
+    testthat (>= 3.0.0)
 License: MIT + file LICENSE
+URL: https://icefil.es, https://github.com/julianhinz/icetools
+BugReports: https://github.com/julianhinz/icetools/issues
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 7.3.2
+Config/testthat/edition: 3
