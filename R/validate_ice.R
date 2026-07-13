@@ -129,6 +129,30 @@ validate_ice <- function(ice_file, check_na = TRUE, check_complete = TRUE,
       " present in the archive but not declared in metadata."))
   }
 
+  # trade_elasticity sign convention (format >= 1.2, issue #15): error
+  # when the data contradicts the declared convention; warn when a
+  # pre-1.2 file records none (readers must assume legacy_negative)
+  te <- ice_data[["trade_elasticity"]]
+  if (!is.null(te)) {
+    theta <- if (is.data.frame(te)) te[[ncol(te)]] else te
+    if (is.numeric(theta)) {
+      declared_convention <- metadata$conventions$trade_elasticity
+      observed <- theta_convention(theta)
+      if (is.null(declared_convention)) {
+        cli::cli_warn(c(
+          "No trade_elasticity sign convention recorded in {.path {ice_file}} (pre-1.2 file).",
+          "i" = "Readers must assume {.val legacy_negative}; re-stamp with icetools >= 0.2.1 to record it."
+        ))
+      } else if (declared_convention %in% c("positive_theta", "legacy_negative") &&
+                 !identical(observed, declared_convention)) {
+        problems <- c(problems, paste0(
+          "trade_elasticity sign contradicts the declared convention '",
+          declared_convention, "' (observed: ",
+          if (is.na(observed)) "mixed/zero signs" else paste0("'", observed, "'"), ")."))
+      }
+    }
+  }
+
   # member checksums (format >= 1.1)
   if (!is.null(metadata$checksums)) {
     temp_dir <- tempfile("validate_ice")

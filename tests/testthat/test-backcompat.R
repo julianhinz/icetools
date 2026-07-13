@@ -36,8 +36,11 @@ test_that("a 0.1.2-written .ice file reads correctly", {
   expect_null(md$format_version)  # pre-1.1 file
 })
 
-test_that("a 0.1.2-written .ice file passes validation", {
-  expect_true(suppressMessages(validate_ice(fixture_path("v012_fixture.ice"))))
+test_that("a 0.1.2-written .ice file passes validation (with the pre-1.2 convention warning)", {
+  expect_warning(
+    expect_true(suppressMessages(validate_ice(fixture_path("v012_fixture.ice")))),
+    "sign convention"
+  )
 })
 
 test_that("list_tables and extract_table work on a 0.1.2-written file", {

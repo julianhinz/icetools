@@ -91,6 +91,20 @@ generate_ice <- function(tables, metadata, output_file,
     data.table::fwrite(scalar_dt, file = file.path(staging, "scalars.csv"))
   }
 
+  # trade_elasticity sign convention (format 1.2, issue #15): KITE-dev
+  # #167 standardized on positive theta, but pre-1.2 files carry legacy
+  # negative values with nothing recording which is which. Auto-detect
+  # from the data unless the caller declared it explicitly.
+  theta <- theta_values(components)
+  if (!is.null(theta) && is.null(metadata$conventions$trade_elasticity)) {
+    detected <- theta_convention(theta)
+    if (is.na(detected)) {
+      cli::cli_warn("trade_elasticity values have mixed or zero signs; no sign convention recorded in the metadata.")
+    } else {
+      metadata$conventions$trade_elasticity <- detected
+    }
+  }
+
   # stamp format/generator info and member checksums on a copy, leaving
   # the caller's metadata object untouched
   metadata$format_version <- metadata$format_version %||% ICE_FORMAT_VERSION

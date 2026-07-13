@@ -22,7 +22,8 @@ create_metadata(
   assumptions = NULL,
   generator = NULL,
   coordinates = NULL,
-  provenance = NULL
+  provenance = NULL,
+  conventions = NULL
 )
 }
 \arguments{
@@ -58,6 +59,14 @@ scenario id), source provenance entries, free-form assumptions,
 generator info (package/repo/commit), artifact coordinates, and
 upstream provenance. See `docs/ice-schema.md` for the conventions
 used by the KITE pipeline.}
+
+\item{conventions}{Optional named list declaring data conventions
+(format 1.2), e.g. `list(trade_elasticity = "positive_theta")`.
+When absent and a `trade_elasticity` component is present,
+[generate_ice()] auto-detects the sign convention from the data
+(`"positive_theta"` or `"legacy_negative"`); files without the
+field are assumed `legacy_negative` by convention. See
+`docs/ice-schema.md` section 3.1.}
 }
 \value{
 A list ready to be passed to [generate_ice()].

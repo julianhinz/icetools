@@ -1,6 +1,6 @@
 # The `.ice` file format — specification
 
-**Format version: 1.1** · maintained in [`icetools`](https://github.com/julianhinz/icetools) · reference site: [icefil.es](https://icefil.es)
+**Format version: 1.2** · maintained in [`icetools`](https://github.com/julianhinz/icetools) · reference site: [icefil.es](https://icefil.es)
 
 `.ice` (**I**nitial **C**onditions **E**quilibrium) files are shareable
 calibration artifacts for quantitative trade models: readable,
@@ -18,6 +18,7 @@ in one of them — file an issue.
 |---|---|---|
 | 1.0 | ≤ 0.1.2 | Implicit format: tar.gz of per-table CSVs + `metadata.yaml`. No `format_version` field. |
 | 1.1 | ≥ 0.2.0 | Additive: `format_version` field, scalar components (`scalars.csv` + `scalars:` metadata section), per-member `checksums:`, `generator:` stamp, formalized provenance fields, verified numeric round-trip cell syntax (incl. hex-float columns). |
+| 1.2 | ≥ 0.2.1 | Additive: `conventions:` block; writers auto-record the `trade_elasticity` sign convention (section 3.1). Files without the block are assumed `legacy_negative`. |
 
 **Compatibility policy.** Format changes are additive. A file without a
 `format_version` field is a 1.0 file. Readers MUST accept files of the
@@ -118,6 +119,7 @@ Top-level fields (▲ = added in 1.1, all optional unless marked):
 | `sources` ▲ | list | upstream source entries (role, description, path/URI, sha256, …) |
 | `assumptions` ▲ | list | free-form notes |
 | `generator` ▲ | map | producing pipeline (repo, commit, …); `generator.icetools_version` is stamped automatically |
+| `conventions` ▲▲ | map | data conventions (1.2), section 3.1 |
 | `coordinates` | map | position of this artifact in its library (e.g. KITE-data: source, year, contract, variant) |
 | `provenance` | map | upstream provenance carried over from the input data |
 | `checksums` ▲ | map | member filename → SHA-256 hex of the member's bytes |
@@ -125,7 +127,37 @@ Top-level fields (▲ = added in 1.1, all optional unless marked):
 | `scalars` ▲ | map | per-scalar type + description (section 4) |
 
 Free-form fields are written verbatim; readers ignore fields they don't
-know (forward compatibility).
+know (forward compatibility). ▲ = added in 1.1, ▲▲ = added in 1.2.
+
+### 3.1 Conventions (1.2)
+
+The `conventions` map declares how the data is to be interpreted where
+the numbers alone are ambiguous. Recognized key:
+
+```yaml
+conventions:
+  trade_elasticity: positive_theta   # or: legacy_negative
+```
+
+KITE standardized on **positive θ** (KITE-dev #167, 2026-07-12); files
+published before format 1.2 carry legacy *negative* values with nothing
+recording which — a double-conversion of θ has already produced a 106%
+zero-shock divergence downstream. Rules:
+
+- **Writers** record the convention. `generate_ice()` auto-detects it
+  from the sign of the `trade_elasticity` component (table's value
+  column or scalar) unless declared explicitly via
+  `create_metadata(conventions = ...)`; mixed/zero signs warn and stamp
+  nothing.
+- **Readers** of files *without* the field MUST assume
+  `legacy_negative` (everything published as format ≤ 1.1 is
+  negative-θ).
+- **Validation** errors when the data's sign contradicts the declared
+  convention, and warns when a file carrying `trade_elasticity` lacks
+  the field.
+
+Producers may add further free-form convention keys (e.g. `units`);
+readers ignore keys they don't know.
 
 Per-table schema under `tables.<name>`:
 

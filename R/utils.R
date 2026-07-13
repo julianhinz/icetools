@@ -6,10 +6,32 @@
 # .ice format version written by this package. Files written by icetools
 # <= 0.1.2 carry no format_version field and are treated as "1.0".
 # Schema changes bump this and get documented in docs/ice-schema.md.
-ICE_FORMAT_VERSION <- "1.1"
+# 1.2: conventions block (trade_elasticity sign convention, issue #15).
+ICE_FORMAT_VERSION <- "1.2"
 
 # .icc format version written by this package (see docs/icc-schema.md).
-ICC_FORMAT_VERSION <- "1.0"
+# 1.1: meta$source$conventions carried over from the source .ice.
+ICC_FORMAT_VERSION <- "1.1"
+
+# Extract the trade_elasticity values from a split component list (table's
+# last column or bare scalar), for the sign-convention machinery (#15).
+theta_values <- function(components) {
+  te <- components$tables[["trade_elasticity"]]
+  if (!is.null(te)) return(te[[ncol(te)]])
+  components$scalars[["trade_elasticity"]]
+}
+
+# Classify the sign convention of trade_elasticity values:
+# "positive_theta" (KITE-dev #167 standard), "legacy_negative", or
+# NA_character_ when mixed/zero/non-numeric (nothing safe to stamp).
+theta_convention <- function(theta) {
+  if (!is.numeric(theta)) return(NA_character_)
+  v <- theta[!is.na(theta)]
+  if (!length(v)) return(NA_character_)
+  if (all(v > 0)) return("positive_theta")
+  if (all(v < 0)) return("legacy_negative")
+  NA_character_
+}
 
 # archive member names that table/scalar components may not use
 RESERVED_COMPONENT_NAMES <- c("metadata", "scalars")

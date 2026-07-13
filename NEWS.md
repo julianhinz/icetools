@@ -1,3 +1,34 @@
+# icetools 0.2.1
+
+Two fixes surfaced by the KITE-dev 26.07 consolidation. `.ice` format
+version 1.2, `.icc` format version 1.1 (both additive).
+
+* `compile_ice()` no longer silently corrupts incomplete tables (#14):
+  `cast_ice_table()` was ported from KITE-dev's pre-#175
+  `cast_variable()` and inherited its recycling bug — base-R `array()`
+  recycles the value column into any larger full grid, misaligning
+  every cell after the first missing row (the BACI trade-only
+  corruption KITE-dev root-caused as #175: ×189 income ratios from a
+  valid-looking `.icc`). Casting now aborts with a classed error
+  (`icetools_incomplete_grid`) naming the table and row/cell counts
+  when rows don't form the exact key grid or key combinations are
+  duplicated. (`validate_ice()` has caught this at authoring time since
+  0.2.0; the compile path is now guarded too.)
+* The `trade_elasticity` sign convention is recorded in the metadata
+  (#15, format 1.2): KITE-dev #167 standardized on positive θ, but
+  nothing in a `.ice` file said which convention its values use —
+  a double-conversion already caused a 106% zero-shock divergence
+  downstream. `generate_ice()` now auto-detects and stamps
+  `conventions: {trade_elasticity: positive_theta | legacy_negative}`
+  (explicit declaration via `create_metadata(conventions = )` wins;
+  mixed signs warn and stamp nothing). `validate_ice()` errors when
+  the data contradicts the declaration and warns on pre-1.2 files that
+  carry `trade_elasticity` without the field — readers of such files
+  must assume `legacy_negative`. The `.icc` carries the source's
+  conventions in `meta$source$conventions` (icc format 1.1). Published
+  KITE-data v0.2.0 artifacts all predate the field: they are
+  legacy-negative and should be re-stamped with icetools ≥ 0.2.1.
+
 # icetools 0.2.0
 
 .ice format version 1.1 (additive; 0.1.2-written files keep reading

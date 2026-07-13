@@ -47,7 +47,15 @@ compile_ice <- function(ice_file,
   tables <- ice[is_table]
   scalars <- ice[!is_table]
 
-  arrays <- lapply(tables, cast_ice_table, variable_order = variable_order)
+  arrays <- lapply(stats::setNames(names(tables), names(tables)), function(nm) {
+    tryCatch(
+      cast_ice_table(tables[[nm]], variable_order = variable_order),
+      icetools_incomplete_grid = function(e) {
+        cli::cli_abort("Cannot compile table {.val {nm}} of {.path {ice_file}}.",
+                       parent = e, class = "icetools_incomplete_grid")
+      }
+    )
+  })
   value_names <- vapply(names(tables), function(nm) {
     metadata$tables[[nm]]$value$name %||% names(tables[[nm]])[ncol(tables[[nm]])]
   }, character(1))
@@ -70,7 +78,8 @@ compile_ice <- function(ice_file,
           description = metadata$description,
           version = metadata$version,
           timestamp = metadata$timestamp,
-          coordinates = metadata$coordinates
+          coordinates = metadata$coordinates,
+          conventions = metadata$conventions
         ),
         compile_options = list(
           variable_order = variable_order,
@@ -278,9 +287,25 @@ cast_ice_table <- function(table, variable_order) {
   keep <- if (is.null(variable_order)) character(0) else intersect(variable_order, names(table))
   table <- table[, c(keep, setdiff(names(table), keep)), with = FALSE]
   key_cols <- names(table)[-ncol(table)]
+  dims <- vapply(key_cols, function(n) data.table::uniqueN(table[[n]]), integer(1))
+  # guard (KITE-dev #175, ported for icetools #14): array() recycles the
+  # value column into any larger full-grid array without a warning,
+  # silently misaligning every cell after the first missing row (the
+  # BACI trade-only corruption: tables shipping no origin == destination
+  # rows). Refuse tables that do not form the exact grid. Classed
+  # 'icetools_incomplete_grid' (KITE-dev's class is kite_incomplete_grid;
+  # renamed to this package's namespace).
+  duplicated_keys <- anyDuplicated(table, by = key_cols) > 0L
+  if (nrow(table) != prod(dims) || duplicated_keys) {
+    grid_label <- paste(key_cols, collapse = " x ")
+    cli::cli_abort(c(
+      "Cannot cast a key-value table to an array: its rows do not form the full {grid_label} grid.",
+      "x" = "The table has {nrow(table)} row{?s}, but the observed key values span a grid of {prod(dims)} cell{?s}{if (duplicated_keys) ', and some key combinations are duplicated' else ''}.",
+      "i" = "Provide exactly one row per key combination, including explicit zeros or defaults; missing combinations are not filled automatically. validate_ice() catches this at authoring time."
+    ), class = "icetools_incomplete_grid")
+  }
   # reverse sort by all key columns for correct array layout
   data.table::setorderv(table, rev(key_cols))
-  dims <- vapply(key_cols, function(n) data.table::uniqueN(table[[n]]), integer(1))
   dim_names <- lapply(key_cols, function(n) {
     v <- unique(table[[n]])
     if (is.factor(v)) as.character(v) else v

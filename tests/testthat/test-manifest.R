@@ -14,7 +14,7 @@ test_that("build_manifest scans directories and reports good and bad archives", 
   expect_match(manifest$sha256, "^[0-9a-f]{64}$")
   expect_identical(manifest[manifest$artifact == "good_a.ice", ]$n_tables, 3L)
   expect_identical(manifest[manifest$artifact == "good_a.ice", ]$n_scalars, 3L)
-  expect_identical(manifest[manifest$artifact == "good_a.ice", ]$format_version, "1.1")
+  expect_identical(manifest[manifest$artifact == "good_a.ice", ]$format_version, "1.2")
   expect_false(is.na(manifest[manifest$artifact == "broken.ice", ]$error))
 
   # archive-level sha256 matches an independent computation

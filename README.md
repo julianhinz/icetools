@@ -108,8 +108,8 @@ can use the same pattern — the formats carry everything needed.
 
 ## Documentation
 
-- [`.ice` format specification](docs/ice-schema.md) (versioned, currently 1.1)
-- [`.icc` format specification](docs/icc-schema.md) (versioned, currently 1.0)
+- [`.ice` format specification](docs/ice-schema.md) (versioned, currently 1.2)
+- [`.icc` format specification](docs/icc-schema.md) (versioned, currently 1.1)
 - [icefil.es](https://icefil.es) — format overview, artifact library, contribution guide
 - Function reference: `?generate_ice`, `?read_ice`, `?validate_ice`,
   `?create_metadata`, `?list_tables`, `?extract_table`,
@@ -141,7 +141,7 @@ trade_elasticity: "Trade elasticities by sector."
   title  = {icetools: Tools for Managing Initial Conditions for Quantitative Trade Models},
   year   = {2026},
   url    = {https://icefil.es},
-  note   = {R package version 0.2.0}
+  note   = {R package version 0.2.1}
 }
 ```
 

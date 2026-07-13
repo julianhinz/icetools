@@ -63,7 +63,7 @@ test_that("working directory is unchanged after generate_ice, also on error", {
 test_that("generator/format stamps and checksums land in the metadata", {
   path <- write_example_ice()
   md <- attr(suppressWarnings(read_ice(path)), "metadata")
-  expect_identical(md$format_version, "1.1")
+  expect_identical(md$format_version, "1.2")
   expect_identical(md$generator$icetools_version,
                    as.character(utils::packageVersion("icetools")))
   expect_true("trade_share.csv" %in% names(md$checksums))

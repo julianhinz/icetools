@@ -36,6 +36,13 @@
 #'   generator info (package/repo/commit), artifact coordinates, and
 #'   upstream provenance. See `docs/ice-schema.md` for the conventions
 #'   used by the KITE pipeline.
+#' @param conventions Optional named list declaring data conventions
+#'   (format 1.2), e.g. `list(trade_elasticity = "positive_theta")`.
+#'   When absent and a `trade_elasticity` component is present,
+#'   [generate_ice()] auto-detects the sign convention from the data
+#'   (`"positive_theta"` or `"legacy_negative"`); files without the
+#'   field are assumed `legacy_negative` by convention. See
+#'   `docs/ice-schema.md` section 3.1.
 #' @return A list ready to be passed to [generate_ice()].
 #' @examples
 #' components <- list(
@@ -63,7 +70,8 @@ create_metadata <- function(tables,
                             assumptions = NULL,
                             generator = NULL,
                             coordinates = NULL,
-                            provenance = NULL) {
+                            provenance = NULL,
+                            conventions = NULL) {
   if (!is.list(tables) || is.data.frame(tables)) {
     cli::cli_abort("'tables' must be a list of components (data.frames and/or scalars).")
   }
@@ -103,7 +111,8 @@ create_metadata <- function(tables,
     identifier = identifier, title = title, license = license,
     contact = contact, citation = citation, model = model,
     scenario = scenario, sources = sources, assumptions = assumptions,
-    generator = generator, coordinates = coordinates, provenance = provenance
+    generator = generator, coordinates = coordinates, provenance = provenance,
+    conventions = conventions
   )
   for (field in names(optional)) {
     if (!is.null(optional[[field]])) metadata[[field]] <- optional[[field]]

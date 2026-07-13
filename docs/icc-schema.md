@@ -1,6 +1,11 @@
 # The `.icc` file format — specification
 
-**Format version: 1.0** · maintained in [`icetools`](https://github.com/julianhinz/icetools) · reference site: [icefil.es](https://icefil.es)
+**Format version: 1.1** · maintained in [`icetools`](https://github.com/julianhinz/icetools) · reference site: [icefil.es](https://icefil.es)
+
+| Format version | icetools | Changes |
+|---|---|---|
+| 1.0 | 0.2.0 | Initial: arrays/scalars/dimensions/meta, qs2-or-RDS container, staleness fields. |
+| 1.1 | ≥ 0.2.1 | Additive: `meta$source$conventions` carried over from the source `.ice` (e.g. the `trade_elasticity` sign convention, `.ice` spec §3.1); compilation aborts on incomplete key grids (classed error `icetools_incomplete_grid`). |
 
 `.icc` (**I**nitial **C**onditions, **C**ompiled) is the compiled
 companion of [`.ice`](ice-schema.md): the expensive cast from
@@ -51,7 +56,8 @@ icc
     │   ├── sha256           #   SHA-256 of the .ice file bytes
     │   ├── ice_format_version
     │   ├── description / version / timestamp
-    │   └── coordinates      #   copied from the .ice metadata
+    │   ├── coordinates      #   copied from the .ice metadata
+    │   └── conventions      #   copied from the .ice metadata (1.1)
     ├── compile_options
     │   ├── variable_order   # dimension ordering used by the cast
     │   └── serializer       # "qs2" | "rds"
@@ -67,8 +73,16 @@ For each table (last column = value, per the `.ice` convention):
    order), remaining key columns in table order, value last. The
    default order is KITE's canonical
    `country, headquarter, factor, origin, destination, sector, input, output`;
-2. sort rows by the **reversed** key columns;
-3. fill `array(value, dim = unique-counts, dimnames = row-order unique
+2. **guard**: the rows must form the exact Cartesian grid of the
+   observed key values — one row per combination, explicit zeros
+   included, no duplicates. Otherwise compilation aborts with a classed
+   error (`icetools_incomplete_grid`) naming the table and row/cell
+   counts. Without this, base-R `array()` silently *recycles* the value
+   column into the larger grid, misaligning every cell after the first
+   missing row (the KITE-dev #175 BACI trade-only corruption: ×189
+   income ratios from an apparently valid `.icc`);
+3. sort rows by the **reversed** key columns;
+4. fill `array(value, dim = unique-counts, dimnames = row-order unique
    key values)`.
 
 `dimensions` is the model-wide inventory: for every key-column name,

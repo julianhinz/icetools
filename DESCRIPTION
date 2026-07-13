@@ -1,7 +1,7 @@
 Package: icetools
 Type: Package
 Title: Tools for Managing Initial Conditions for Quantitative Trade Models
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("Julian", "Hinz", email = "mail@julianhinz.com",
     role = c("aut", "cre"))
 Description: Create, read, validate, and manage .ice files (portable initial

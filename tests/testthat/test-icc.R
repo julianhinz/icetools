@@ -140,6 +140,40 @@ test_that("read_icc rejects non-icc files and warns on version drift", {
   expect_warning(read_icc(icc_path), "0.0.1")
 })
 
+test_that("incomplete key grids abort the cast instead of silently recycling (#14)", {
+  # the BACI trade-only shape: no origin == destination rows; array()
+  # would recycle values across the full 2x2 grid without this guard
+  incomplete <- list(trade_share = data.frame(
+    origin = c("USA", "CHN"),
+    destination = c("CHN", "USA"),
+    value = c(0.25, 0.4)
+  ))
+  path <- tempfile(fileext = ".ice")
+  suppressMessages(generate_ice(incomplete, create_metadata(incomplete), path))
+  err <- expect_error(compile_ice(path), class = "icetools_incomplete_grid")
+  expect_match(conditionMessage(err), "trade_share")
+  expect_match(conditionMessage(err$parent), "2 rows")
+  expect_match(conditionMessage(err$parent), "4 cells")
+})
+
+test_that("duplicated key combinations abort the cast (#14)", {
+  dupes <- list(t = data.frame(k = c("a", "a"), value = c(1, 2)))
+  path <- tempfile(fileext = ".ice")
+  suppressMessages(generate_ice(dupes, create_metadata(dupes), path))
+  err <- expect_error(compile_ice(path), class = "icetools_incomplete_grid")
+  expect_match(conditionMessage(err$parent), "duplicated")
+})
+
+test_that("complete grids still cast; zero-row tables pass the guard", {
+  components <- list(z = data.frame(k = character(0), value = numeric(0)),
+                     t = data.frame(k = c("a", "b"), value = c(1, 2)))
+  path <- tempfile(fileext = ".ice")
+  suppressMessages(generate_ice(components, create_metadata(components), path))
+  compiled <- compile_ice(path)
+  expect_identical(compiled$arrays$t[["b"]], 2)
+  expect_identical(length(compiled$arrays$z), 0L)
+})
+
 test_that("keyless tables stay plain vectors through compile and melt", {
   components <- list(world_gdp = data.frame(value = 84.5),
                      t = data.frame(k = c("a", "b"), value = c(1, 2)))
