@@ -87,6 +87,8 @@ and is converted with `as.numeric()`, which parses hex floats exactly.
 Consumers in other languages should use `float.fromhex`-equivalents for
 `0x`-prefixed cells.
 
+A writer may switch between decimal and hex-float syntax between row blocks of one column; readers MUST accept both syntaxes within a column.
+
 Non-finite cells are the literals `NaN`, `Inf`, `-Inf`; missing values
 are empty cells. (`NA` and `NaN` are distinct and both round-trip.)
 
