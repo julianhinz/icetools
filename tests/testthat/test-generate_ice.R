@@ -86,3 +86,37 @@ test_that("caller's metadata object is not mutated", {
 test_that("read-after-write validation passes for a good artifact", {
   expect_no_error(write_example_ice(validate = TRUE))
 })
+
+test_that("generate_ice writes large tables in chunks and round-trips bit-exactly", {
+  set.seed(7)
+  n <- 25000L
+  tab <- data.table::data.table(origin = sprintf("c%03d", sample(226L, n, TRUE)),
+                                destination = sprintf("c%03d", sample(226L, n, TRUE)),
+                                sector = sprintf("%06d", seq_len(n)),
+                                value = stats::runif(n))
+  tables <- list(trade_share = tab)
+  out <- file.path(tempdir(), "chunked.ice")
+  generate_ice(tables, create_metadata(tables, description = "chunk test"), out, chunk_rows = 10000L)
+  back <- read_ice(out)
+  expect_identical(back$trade_share$value, tab$value)
+  expect_identical(back$trade_share$sector, tab$sector)
+  expect_identical(nrow(back$trade_share), n)
+  dir <- tempfile(); dir.create(dir); utils::untar(out, exdir = dir)
+  expect_identical(sum(grepl("^origin,", readLines(file.path(dir, "trade_share.csv")))), 1L)
+})
+
+test_that("generate_ice with chunk_rows smaller than the table matches the unchunked result", {
+  tables <- list(x = data.frame(country = c("USA", "CHN"), value = c(0.1, 0.2)))
+  a <- file.path(tempdir(), "a.ice"); b <- file.path(tempdir(), "b.ice")
+  generate_ice(tables, create_metadata(tables), a)
+  generate_ice(tables, create_metadata(tables), b, chunk_rows = 1L)
+  expect_identical(read_ice(a)$x$value, read_ice(b)$x$value)
+})
+
+test_that("generate_ice validates chunk_rows", {
+  tables <- list(x = data.frame(country = "USA", value = 0.1))
+  out <- file.path(tempdir(), "bad.ice")
+  expect_error(generate_ice(tables, create_metadata(tables), out, chunk_rows = 0), "chunk_rows")
+  expect_error(generate_ice(tables, create_metadata(tables), out, chunk_rows = c(1, 2)), "chunk_rows")
+  expect_error(generate_ice(tables, create_metadata(tables), out, chunk_rows = NA), "chunk_rows")
+})

@@ -4,7 +4,14 @@
 \alias{generate_ice}
 \title{Generate a .ice file}
 \usage{
-generate_ice(tables, metadata, output_file, validate = FALSE, checksums = TRUE)
+generate_ice(
+  tables,
+  metadata,
+  output_file,
+  validate = FALSE,
+  checksums = TRUE,
+  chunk_rows = 1000000L
+)
 }
 \arguments{
 \item{tables}{A named list of components: data.frames/data.tables
@@ -27,6 +34,11 @@ validation). Default `FALSE`.}
 
 \item{checksums}{If `TRUE` (default), a `checksums` section with the
 SHA-256 of every data member is written into `metadata.yaml`.}
+
+\item{chunk_rows}{Tables with more than this many rows are formatted
+and written in row blocks of this size, bounding peak memory. The
+decimal/hex-float choice is made per block and column; [read_ice()]
+accepts both syntaxes within a column. Default `1e6L`.}
 }
 \value{
 Invisibly, the path to the written file.

@@ -1,3 +1,7 @@
+# icetools 0.3.0
+
+* `generate_ice()` gains `chunk_rows` (default `1e6L`): large tables are formatted and written in row blocks to bound peak memory. Output stays bit-exact on read-back.
+
 # icetools 0.2.1
 
 Two fixes surfaced by the KITE-dev 26.07 consolidation. `.ice` format

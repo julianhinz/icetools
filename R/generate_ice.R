@@ -28,6 +28,10 @@
 #'   validation). Default `FALSE`.
 #' @param checksums If `TRUE` (default), a `checksums` section with the
 #'   SHA-256 of every data member is written into `metadata.yaml`.
+#' @param chunk_rows Tables with more than this many rows are formatted
+#'   and written in row blocks of this size, bounding peak memory. The
+#'   decimal/hex-float choice is made per block and column; [read_ice()]
+#'   accepts both syntaxes within a column. Default `1e6L`.
 #' @return Invisibly, the path to the written file.
 #' @examples
 #' tables <- list(
@@ -39,7 +43,13 @@
 #' generate_ice(tables, metadata, out)
 #' @export
 generate_ice <- function(tables, metadata, output_file,
-                         validate = FALSE, checksums = TRUE) {
+                         validate = FALSE, checksums = TRUE,
+                         chunk_rows = 1e6L) {
+  if (!is.numeric(chunk_rows) || length(chunk_rows) != 1L ||
+      is.na(chunk_rows) || chunk_rows < 1) {
+    cli::cli_abort("{.arg chunk_rows} must be a single number >= 1.")
+  }
+  chunk_rows <- as.integer(min(chunk_rows, .Machine$integer.max))
   if (!is.list(tables) || is.data.frame(tables) || !is.list(metadata)) {
     cli::cli_abort("Both 'tables' and 'metadata' must be lists.")
   }
@@ -65,19 +75,27 @@ generate_ice <- function(tables, metadata, output_file,
 
   for (table_name in names(components$tables)) {
     table <- data.table::as.data.table(components$tables[[table_name]])
-    # normalize for serialization: factors to character, doubles to
-    # verified round-trip strings (the write side of the numeric
-    # round-trip guarantee, issue #10)
-    for (col in names(table)) {
-      if (is.factor(table[[col]])) {
-        data.table::set(table, j = col, value = as.character(table[[col]]))
-      } else if (is.double(table[[col]]) && !inherits(table[[col]], c("Date", "POSIXt"))) {
-        data.table::set(table, j = col, value = format_double_shortest(table[[col]]))
+    csv_path <- file.path(staging, paste0(table_name, ".csv"))
+    # write in row blocks so formatting never materializes a full-table
+    # character copy; the decimal/hex-float decision is per block and column
+    n <- nrow(table)
+    starts <- if (n > 0L) seq.int(1L, n, by = chunk_rows) else 1L
+    for (i in seq_along(starts)) {
+      from <- starts[i]
+      to <- min(n, from + chunk_rows - 1L)
+      chunk <- if (length(starts) == 1L) table else table[from:to]
+      # normalize for serialization: factors to character, doubles to
+      # verified round-trip strings (the write side of the numeric
+      # round-trip guarantee, issue #10)
+      for (col in names(chunk)) {
+        if (is.factor(chunk[[col]])) {
+          data.table::set(chunk, j = col, value = as.character(chunk[[col]]))
+        } else if (is.double(chunk[[col]]) && !inherits(chunk[[col]], c("Date", "POSIXt"))) {
+          data.table::set(chunk, j = col, value = format_double_shortest(chunk[[col]]))
+        }
       }
+      data.table::fwrite(chunk, file = csv_path, scipen = 999, append = i > 1L)
     }
-    data.table::fwrite(table,
-                       file = file.path(staging, paste0(table_name, ".csv")),
-                       scipen = 999)
   }
 
   if (length(components$scalars)) {
