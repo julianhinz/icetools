@@ -120,3 +120,30 @@ test_that("generate_ice validates chunk_rows", {
   expect_error(generate_ice(tables, create_metadata(tables), out, chunk_rows = c(1, 2)), "chunk_rows")
   expect_error(generate_ice(tables, create_metadata(tables), out, chunk_rows = NA), "chunk_rows")
 })
+
+test_that("generate_ice accepts chunk_rows = Inf and above the integer range without overflow", {
+  tables <- list(x = data.frame(country = c("USA", "CHN", "DEU"), value = c(0.1, 0.2, 0.3)))
+  for (cr in list(Inf, 1e10, .Machine$integer.max)) {
+    out <- tempfile(fileext = ".ice")
+    expect_no_warning(generate_ice(tables, create_metadata(tables), out, chunk_rows = cr))
+    expect_identical(read_ice(out)$x$value, c(0.1, 0.2, 0.3))
+  }
+})
+
+test_that("a decimal block followed by a hex-float block reads back identically", {
+  # the decimal/hex decision is per block; on platforms whose parser reads every decimal
+  # exactly no value goes hex, so the formatter is forced to hex for the block with the subnormal
+  original <- format_double_shortest
+  local_mocked_bindings(format_double_shortest = function(x) {
+    if (any(x == 5e-324, na.rm = TRUE)) sprintf_hex_exact(x) else original(x)
+  })
+  vals <- c(0.1, 0.2, 5e-324, 1 / 3)
+  tables <- list(x = data.frame(k = c("a", "b", "c", "d"), value = vals))
+  out <- tempfile(fileext = ".ice")
+  generate_ice(tables, create_metadata(tables), out, chunk_rows = 2L)
+  dir <- tempfile(); dir.create(dir); utils::untar(out, exdir = dir)
+  lines <- readLines(file.path(dir, "x.csv"))
+  expect_false(any(grepl("0x", lines[2:3])))
+  expect_true(all(grepl("0x", lines[4:5])))
+  expect_identical(read_ice(out)$x$value, vals)
+})

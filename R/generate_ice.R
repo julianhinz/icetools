@@ -82,7 +82,9 @@ generate_ice <- function(tables, metadata, output_file,
     starts <- if (n > 0L) seq.int(1L, n, by = chunk_rows) else 1L
     for (i in seq_along(starts)) {
       from <- starts[i]
-      to <- min(n, from + chunk_rows - 1L)
+      # in double: from + chunk_rows overflows integer when chunk_rows is near
+      # .Machine$integer.max (chunk_rows = Inf is clamped to it)
+      to <- as.integer(min(as.double(n), as.double(from) + chunk_rows - 1))
       chunk <- if (length(starts) == 1L) table else table[from:to]
       # normalize for serialization: factors to character, doubles to
       # verified round-trip strings (the write side of the numeric

@@ -1,6 +1,6 @@
 # icetools 0.3.0
 
-* `generate_ice()` gains `chunk_rows` (default `1e6L`): large tables are formatted and written in row blocks to bound peak memory. Output stays bit-exact on read-back.
+* `generate_ice()` gains `chunk_rows` (default `1e6L`): large tables are formatted and written in row blocks to bound peak memory. Output stays bit-exact on read-back, also when one block is written in decimal and the next in hex-float. `chunk_rows = Inf` (or any value above the integer range) writes one block.
 
 # icetools 0.2.1
 
